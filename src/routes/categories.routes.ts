@@ -1,26 +1,28 @@
 import { Router } from "express";
-import { Category } from "../model/Category";
+import { CategoriesRepository } from "../repositories/CategoriesRepository";
 
-const catergoriesRoutes = Router();
+const categoriesRoutes = Router();
+const categoriesRepository = new CategoriesRepository()
 
-const categories = [];
+categoriesRoutes.post("/", (request, response) => {
 
-catergoriesRoutes.post("/", (request, response) => {
     const { name, description } = request.body;
-
-    const category = new Category()
-
-    Object.assign(category, {
-        name,
-        description,
-        created_at: new Date()
-    })
-    categories.push(category);
-
-    return response.status(201).json({ category });
+    const categoryAlreadyExists = categoriesRepository.findByName(name)
+    if (categoryAlreadyExists) {
+        return response.status(400).json({ error: "Category already exists" })
+    }
+    categoriesRepository.create({ name, description })
+    return response.status(201).send()
 
 })
 
+categoriesRoutes.get("/", (request, response) => {
+    const all = categoriesRepository.list()
+    return response.status(200).json(all)
+
+})
+
+
 export {
-    catergoriesRoutes
+    categoriesRoutes
 };
